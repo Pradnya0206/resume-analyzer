@@ -1,0 +1,80 @@
+# resume_analyzer.py
+
+import PyPDF2
+import re
+
+# ----- Step 1: Read PDF Resume -----
+def extract_text_pdf(file_path):
+    text = ""
+    with open(file_path, 'rb') as f:
+        reader = PyPDF2.PdfReader(f)
+        for page in reader.pages:
+            text += page.extract_text() + "\n"
+    return text
+
+# ----- Step 2: Parse Resume -----
+def extract_email(text):
+    pattern = r'\S+@\S+'
+    emails = re.findall(pattern, text)
+    return emails[0] if emails else "No email found"
+
+def extract_phone(text):
+    pattern = r'\+?\d[\d -]{8,12}\d'
+    phones = re.findall(pattern, text)
+    return phones[0] if phones else "No phone found"
+
+def extract_skills(text):
+    skills_list = ['Python', 'Java', 'C++', 'Machine Learning', 'SQL', 'Excel', 'HTML', 'CSS', 'JavaScript']
+    skills_found = [skill for skill in skills_list if skill.lower() in text.lower()]
+    return skills_found if skills_found else "No skills found"
+
+def extract_education(text):
+    education_keywords = ['B.Tech', 'M.Tech', 'MBA', 'BSc', 'MSc', 'High School', 'Diploma']
+    education_found = [edu for edu in education_keywords if edu.lower() in text.lower()]
+    return education_found if education_found else "No education found"
+
+# ----- Step 3: Main Program -----
+if __name__ == "__main__":
+    # Change this to your PDF resume name
+    resume_text = extract_text_pdf("sample_resume.pdf")
+
+    print("----- Resume Analysis -----")
+    print("Email:", extract_email(resume_text))
+    print("Phone:", extract_phone(resume_text))
+    print("Skills:", extract_skills(resume_text))
+    print("Education:", extract_education(resume_text))
+    # ----- Step 4: Job Match -----
+def job_match(resume_skills, job_skills):
+    matched_skills = [skill for skill in job_skills if skill in resume_skills]
+    missing_skills = [skill for skill in job_skills if skill not in matched_skills]
+    score = round(len(matched_skills) / len(job_skills) * 100, 2)
+    return score, matched_skills, missing_skills
+
+# ----- Example Usage -----
+# Define job skills for testing
+job_skills = ['Python', 'Machine Learning', 'SQL', 'Excel']
+
+# Use the extracted skills from the resume
+resume_skills = extract_skills(resume_text)
+
+score, matched, missing = job_match(resume_skills, job_skills)
+
+print("\n----- Job Fit Analysis -----")
+print("Job Match Score:", score, "%")
+print("Matched Skills:", matched)
+print("Missing Skills:", missing)
+import matplotlib.pyplot as plt
+
+# ----- Step 5: Plot Skill Match -----
+def plot_skills(matched, missing):
+    categories = ['Matched Skills', 'Missing Skills']
+    values = [len(matched), len(missing)]
+
+    colors = ['green', 'red']
+    plt.bar(categories, values, color=colors)
+    plt.title("Resume Skill Match")
+    plt.ylabel("Number of Skills")
+    plt.show()
+
+# Call the function
+plot_skills(matched, missing)
